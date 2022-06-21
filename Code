@@ -1,0 +1,308 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Scanner;
+import java.util.Map.Entry;
+import java.util.Optional;
+public class shoe_store {
+       private ArrayList<Shoe> inventory = new ArrayList<>();
+       public static void main(String[] args) throws FileNotFoundException {
+               shoe_store ss = new shoe_store();
+               ss.loadShoeInventory();
+               System.out.println("Most expensive shoe price is : $" + ss.mostExpensiveShoe());
+               System.out.println("The brand " + ss.highestStockedShoe() + " has the highest stock");
+               System.out.println("The brand " + ss.mostSizesShoe() + " has the most number of sizes in the shoes");
+               System.out.println("The brand " + ss.mostOnSaleShoe() + " has the most shoes on sale");
+       }
+       public void loadShoeInventory() throws FileNotFoundException {
+               Scanner sc = new Scanner(new File("Countries.txt"));
+               while (sc.hasNextLine()) {
+                       String line = sc.nextLine();
+                       String[] shoe = line.split(",");
+                       if (shoe[0].equals("Walking")) {
+                               Walking w = new Walking(shoe[1], shoe[0], Double.parseDouble(shoe[3]), Boolean.parseBoolean(shoe[5]));
+                               Shoe s = hasExists(w);
+                               if (s == null) {
+                                       w.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                                       inventory.add(w);
+                               } else {
+                                       s.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                               }
+                       } else if (shoe[0].equals("Hiking")) {
+                               Hiking h = new Hiking(shoe[1], shoe[0], Double.parseDouble(shoe[3]), Integer.parseInt(shoe[5]));
+                               Shoe s = hasExists(h);
+                               if (s == null) {
+                                       h.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                                       inventory.add(h);
+                               } else {
+                                       s.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                               }
+                       } else if (shoe[0].equals("Runinng")) {
+                               Running r = new Running(shoe[1], shoe[0], Double.parseDouble(shoe[3]), Double.parseDouble(shoe[5]));
+                               Shoe s = hasExists(r);
+                               if (s == null) {
+                                       r.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                                       inventory.add(r);
+                               } else {
+                                       s.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                               }
+                       } else {
+                               Shoe s = new Shoe(shoe[1], shoe[0], Double.parseDouble(shoe[3]));
+                               Shoe s1 = hasExists(s);
+                               if (s1 == null) {
+                                       s.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                                       inventory.add(s);
+                               } else {
+                                       s1.setQuantity(Integer.parseInt(shoe[2]), Integer.parseInt(shoe[4]));
+                               }
+                       }
+               }
+       }
+       public Shoe hasExists(Shoe s) {
+               for (Shoe shoe : inventory) {
+                       if (shoe.equals(s))
+                               return shoe;
+               }
+               return null;
+       }
+       public double mostExpensiveShoe() {
+               double max = 0;
+               for (Shoe s : inventory) {
+                       for (int i = 7; i <= 12; i++) {
+                               if (s.getPrice(i) > max) {
+                                       max = s.getPrice(i);
+                               }
+                       }
+               }
+               return max;
+       }
+       public String mostOnSaleShoe() {
+               Map<String, Integer> map = new HashMap<>();
+               for (Shoe s : inventory) {
+                       String brand = s.getBrand();
+                       int count = 0;
+                       if (s instanceof Walking) {
+                               for (int i = 7; i <= 12; i++) {
+                                       if (((Walking) s).isOnSale(i)) {
+                                               count = count + s.getQuantity(i);
+                                       }
+                               }
+                       } else if (s instanceof Running) {
+                               for (int i = 7; i <= 12; i++) {
+                                       if (((Running) s).isOnSale(i)) {
+                                               count = count + s.getQuantity(i);
+                                       }
+                               }
+                       } else if (s instanceof Hiking) {
+                               for (int i = 7; i <= 12; i++) {
+                                       if (((Hiking) s).isOnSale(i)) {
+                                               count = count + s.getQuantity(i);
+                                       }
+                               }
+                       }
+                       if (map.containsKey(brand)) {
+                               map.put(brand, map.get(brand) + count);
+                       } else {
+                               map.put(brand, count);
+                       }
+               }
+               Optional<Entry<String, Integer>> set = map.entrySet().stream()
+                               .max((Entry<String, Integer> e1, Entry<String, Integer> e2) -> e1.getValue().compareTo(e2.getValue()));
+               return set.get().getKey();
+       }
+       public String mostSizesShoe() {
+               Map<String, Integer> map = new HashMap<>();
+               for (Shoe s : inventory) {
+                       String brand = s.getBrand();
+                       int count = 0;
+                       for (int i = 7; i <= 12; i++) {
+                               if (s.getQuantity(i) > 0) {
+                                       count++;
+                               }
+                       }
+                       if (map.containsKey(brand)) {
+                               map.put(brand, map.get(brand) + count);
+                       } else {
+                               map.put(brand, count);
+                       }
+               }
+               Optional<Entry<String, Integer>> set = map.entrySet().stream()
+                               .max((Entry<String, Integer> e1, Entry<String, Integer> e2) -> e1.getValue().compareTo(e2.getValue()));
+               return set.get().getKey();
+       }
+       public String highestStockedShoe() {
+               Map<String, Integer> map = new HashMap<>();
+               for (Shoe s : inventory) {
+                       String brand = s.getBrand();
+                       int count = 0;
+                       for (int i = 7; i <= 12; i++) {
+                               count = count + s.getQuantity(i);
+                       }
+                       if (map.containsKey(brand)) {
+                               map.put(brand, map.get(brand) + count);
+                       } else {
+                               map.put(brand, count);
+                       }
+               }
+               Optional<Entry<String, Integer>> set = map.entrySet().stream()
+                               .max((Entry<String, Integer> e1, Entry<String, Integer> e2) -> e1.getValue().compareTo(e2.getValue()));
+               return set.get().getKey();
+       }
+}
+
+
+package hello;
+ 
+public class Shoe {
+ private String brand;
+ private String type;
+ private double price;
+ int[] quantity;
+ 
+ public Shoe(String brand, String type, double price) {
+   super();
+   this.brand = brand;
+   this.type = type;
+   this.price = price;
+   quantity = new int[6];
+ }
+ 
+ public String getBrand() {
+   return brand;
+ }
+ 
+ public String getType() {
+   return type;
+ }
+ 
+ public double getPrice(int size) {
+   if (isOnSale(size)) {
+     return price * 0.8;
+   } else {
+     return price;
+   }
+ }
+ 
+ public int getQuantity(int size) {
+   return quantity[size - 7];
+ }
+ 
+ public void setPrice(double price) {
+   this.price = price;
+ }
+ 
+ public void setQuantity(int size, int quantity) {
+   this.quantity[size - 7] = quantity;
+ }
+ 
+ boolean isOnSale(int size) {
+   return false;
+ }
+ 
+ @Override
+ public boolean equals(Object obj) {
+   if (this == obj)
+     return true;
+   if (obj == null)
+     return false;
+   if (getClass() != obj.getClass())
+     return false;
+   Shoe other = (Shoe) obj;
+   if (brand == null) {
+     if (other.brand != null)
+       return false;
+   } else if (!brand.equals(other.brand))
+     return false;
+   if (Double.doubleToLongBits(price) != Double.doubleToLongBits(other.price))
+     return false;
+   if (type == null) {
+     if (other.type != null)
+       return false;
+   } else if (!type.equals(other.type))
+     return false;
+   return true;
+ }
+ 
+ public String getSpecial() {
+   return "Shoe(" + brand + ", " + type + ", " + price + ")";
+ }
+}
+
+
+package hello;
+ 
+public class Running extends Shoe {
+ private double weight;
+ 
+ public Running(String brand, String type, double price, double weight) {
+   super(brand, type, price);
+   this.weight = weight;
+ }
+ 
+ public double getWeight() {
+   return weight;
+ }
+ 
+ public boolean isOnSale(int size) {
+   if (this.getQuantity(size) > 3 && (!(this.getBrand().equals("Saucony"))) && (!(this.getBrand().equals("Asics")))) {
+     return true;
+   }
+   return false;
+ }
+ 
+ public double getPrice(int size) {
+   if (isOnSale(size))
+     return (0.7 * this.getPrice(size));
+   else
+     return this.getPrice(size);
+ }
+}
+
+
+package hello;
+ 
+public class Hiking extends Shoe {
+ private int traction;
+ 
+ public Hiking(String brand, String type, double price, int traction) {
+   super(brand, type, price);
+   this.traction = traction;
+ }
+ 
+ public int getTraction() {
+   return traction;
+ }
+ 
+ public boolean isOnSale(int size) {
+   return super.isOnSale(size);
+ }
+}
+ 
+ 
+ 
+ 
+ 
+
+ 
+package hello;
+ 
+public class Walking extends Shoe {
+   private boolean goreTex;
+   public Walking(String brand, String type, double price, boolean goreTex) {
+           super(brand, type, price);
+           this.goreTex = goreTex;
+   }
+   public boolean getGoreTex() {
+           return goreTex;
+   }
+  
+   public boolean isOnSale(int size){
+           if(this.getQuantity(size)>2 && !(this.getBrand().equals("Puma"))){
+                   return true;
+           }
+           return false;          
+   }
+}
+ 
